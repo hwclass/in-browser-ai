@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Support Triage</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        color: #172026;
+        background: #f7f8fa;
+      }
+      main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 32px 20px;
+      }
+      textarea, pre, button {
+        font: inherit;
+      }
+      textarea {
+        width: 100%;
+        min-height: 120px;
+      }
+      button {
+        margin: 12px 0;
+        padding: 8px 12px;
+      }
+      pre {
+        overflow: auto;
+        padding: 12px;
+        background: #fff;
+        border: 1px solid #d8dde3;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Support Triage</h1>
+      <label for="runtime-mode">Runtime</label>
+      <select id="runtime-mode" data-testid="runtime-mode">
+        <option value="deterministic">DETERMINISTIC TEST RUNTIME</option>
+        <option value="real">REAL CHROME PROMPT API</option>
+      </select>
+      <h2>Runtime Status</h2>
+      <pre id="runtime-status" data-testid="runtime-status">Waiting</pre>
+      <label for="ticket">Ticket</label>
+      <textarea id="ticket">My order arrived damaged and I need a replacement before Friday.</textarea>
+      <button id="triage">Run triage</button>
+      <h2>Application Result</h2>
+      <pre id="result" data-testid="result">Waiting</pre>
+      <h2>Telemetry</h2>
+      <pre id="telemetry" data-testid="telemetry">Waiting</pre>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
