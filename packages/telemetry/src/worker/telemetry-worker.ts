@@ -10,7 +10,7 @@ export async function processTelemetryWorkerMessage(
   message: TelemetryWorkerMessage,
   delivery: WorkerDelivery
 ): Promise<TelemetryObservation | undefined> {
-  if (message.type !== "observation.prompt") return undefined;
+  if (message.type !== "observation.prompt" && message.type !== "observation.promptStreaming") return undefined;
   const observation = normalizePromptObservation(message.payload);
   await delivery.deliver(observation);
   return observation;

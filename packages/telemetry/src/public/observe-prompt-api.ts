@@ -1,5 +1,6 @@
 import { inspectPromptApiAvailability } from "../shell/runtimes/prompt-api/availability.js";
 import { createPromptObservationShell } from "../shell/runtimes/prompt-api/observe-prompt.js";
+import { createPromptStreamingObservationShell } from "../shell/runtimes/prompt-api/observe-prompt-streaming.js";
 import { createWorkerBridge } from "../shell/worker/worker-bridge.js";
 import type { TelemetryController, TelemetryOptions } from "./types.js";
 
@@ -25,17 +26,29 @@ export function observePromptApi(options: TelemetryOptions): TelemetryController
   };
   options.onStatus?.({ type: "worker.ready" });
 
+  const sessionId = nextId("session");
   const prompt = createPromptObservationShell({
     session: options.session,
     bridge: observedBridge,
-    sessionId: nextId("session"),
+    sessionId,
     runtime,
-    idGenerator: () => nextId("telemetry")
+    idGenerator: () => nextId("telemetry"),
+    now: options.now
+  });
+
+  const promptStreaming = createPromptStreamingObservationShell({
+    session: options.session,
+    bridge: observedBridge,
+    sessionId,
+    runtime,
+    idGenerator: () => nextId("telemetry"),
+    now: options.now
   });
 
   return {
     status,
     prompt,
+    promptStreaming,
     flush: () => bridge.flush(),
     async stop() {
       await bridge.flush();

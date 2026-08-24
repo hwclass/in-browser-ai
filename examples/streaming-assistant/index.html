@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Streaming Assistant</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        color: #172026;
+        background: #f7f8fa;
+      }
+      main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 32px 20px;
+      }
+      textarea, pre, button, select {
+        font: inherit;
+      }
+      textarea {
+        width: 100%;
+        min-height: 100px;
+      }
+      button {
+        margin: 12px 0;
+        padding: 8px 12px;
+      }
+      pre {
+        overflow: auto;
+        min-height: 44px;
+        padding: 12px;
+        background: #fff;
+        border: 1px solid #d8dde3;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Streaming Assistant</h1>
+      <label for="runtime-mode">Runtime</label>
+      <select id="runtime-mode" data-testid="runtime-mode">
+        <option value="deterministic">DETERMINISTIC TEST RUNTIME</option>
+        <option value="real">REAL CHROME PROMPT API</option>
+      </select>
+      <h2>Runtime Status</h2>
+      <pre id="runtime-status" data-testid="runtime-status">Waiting</pre>
+      <label for="prompt">Prompt</label>
+      <textarea id="prompt">Draft a short support reply for a damaged order replacement.</textarea>
+      <button id="run">Run streaming assistant</button>
+      <h2>Application Result</h2>
+      <pre id="result" data-testid="result">Waiting</pre>
+      <h2>Telemetry</h2>
+      <pre id="telemetry" data-testid="telemetry">Waiting</pre>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

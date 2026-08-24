@@ -22,12 +22,14 @@ export type TelemetryOptions = {
   session: PromptApiSession;
   destinations?: ConsoleDestination[];
   runtime?: RuntimeConfig;
+  now?: () => number;
   onStatus?: (status: TelemetryStatus) => void;
 };
 
 export type TelemetryController = {
   readonly status: TelemetryStatusSnapshot;
   prompt(input: unknown, options?: unknown): Promise<unknown>;
+  promptStreaming(input: unknown, options?: unknown): AsyncIterable<unknown> | ReadableStream<unknown>;
   flush(): Promise<void>;
   stop(): Promise<void>;
 };

@@ -1,8 +1,8 @@
 # in-browser-ai
 
 Browser AI tooling experiments. The current public PoC slice is
-`@in-browser-ai/telemetry` for observing Chrome Prompt API `prompt()` operations
-without changing application behavior.
+`@in-browser-ai/telemetry` for observing Chrome Prompt API `prompt()` and
+`promptStreaming()` operations without changing application behavior.
 
 ## Quickstart
 
@@ -13,6 +13,7 @@ npm test
 npm run test:integration
 npm run test:e2e
 npm run test:e2e:real-prompt-api
+npm run test:e2e:real-prompt-api-streaming
 npm run examples
 ```
 
@@ -68,3 +69,48 @@ model flag state when your Chrome configuration requires flags.
 
 Slice 1 telemetry is metadata-oriented. Raw prompt and response content are not
 included in Worker messages or normalized observations.
+
+## Slice 2 Capability
+
+The streaming-assistant example extends the same Worker pipeline to
+`promptStreaming()`:
+
+```text
+Prompt API stream
+-> application consumes chunks incrementally
+-> main-thread observation shell records summary state
+-> typed Worker protocol
+-> Dedicated Worker entry
+-> Functional Core normalization
+-> one console telemetry observation
+-> streaming-assistant telemetry panel
+```
+
+Run deterministic streaming validation with:
+
+```bash
+npm run test:e2e
+```
+
+The deterministic streaming path proves ordered output preservation, timing,
+no-output behavior, failure, cancellation, and one-summary-observation telemetry
+without relying on native model output.
+
+For real Chrome `promptStreaming()` compatibility, run:
+
+```bash
+npm run test:e2e:real-prompt-api-streaming
+```
+
+This native gate reuses the installed Chrome profile/runtime path from Slice 1
+and uses the same English text `expectedInputs` / `expectedOutputs` options for
+`LanguageModel.availability()` and `LanguageModel.create()`. Its result is
+reported as PASS, FAIL, BLOCKED, or UNAVAILABLE. It never falls back to the
+deterministic fixture, and successful native `prompt()` validation does not
+stand in for native `promptStreaming()` validation.
+
+Slice 2 remains metadata-oriented. Raw generated stream chunks are not forwarded
+to the telemetry Worker merely for telemetry. The telemetry path emits one
+normalized streaming summary observation with output count, whether output was
+produced, TTFO when output exists, total duration, outcome, runtime details, and
+safe usage/context data where available.

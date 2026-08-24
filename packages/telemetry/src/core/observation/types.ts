@@ -1,4 +1,4 @@
-export type OperationType = "prompt";
+export type OperationType = "prompt" | "promptStreaming";
 
 export type ObservationOutcome = "success" | "error" | "cancelled";
 
@@ -41,6 +41,11 @@ export type InferenceContext = {
   contextWindowLimit?: number;
 };
 
+export type StreamingSummary = {
+  outputCount: number;
+  producedOutput: boolean;
+};
+
 export type PromptObservationInput = {
   observationId: string;
   sessionId: string;
@@ -53,6 +58,9 @@ export type PromptObservationInput = {
   error?: unknown;
   usage?: InferenceUsage;
   context?: InferenceContext;
+  stream?: StreamingSummary & {
+    timeToFirstOutputMs?: number;
+  };
 };
 
 export type TelemetryObservation = {
@@ -64,9 +72,11 @@ export type TelemetryObservation = {
   startedAt: string;
   endedAt: string;
   durationMs: number;
+  timeToFirstOutputMs?: number;
   outcome: ObservationOutcome;
   error?: TelemetryError;
   runtime: RuntimeSummary;
   usage?: InferenceUsage;
   context?: InferenceContext;
+  stream?: StreamingSummary;
 };

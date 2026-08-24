@@ -52,6 +52,15 @@ export function normalizePromptObservation(input: PromptObservationInput): Telem
   if (error) observation.error = error;
   if (usage) observation.usage = usage;
   if (context) observation.context = context;
+  if (input.stream) {
+    observation.stream = {
+      outputCount: input.stream.outputCount,
+      producedOutput: input.stream.producedOutput
+    };
+    if (input.stream.timeToFirstOutputMs !== undefined) {
+      observation.timeToFirstOutputMs = input.stream.timeToFirstOutputMs;
+    }
+  }
 
   return observation;
 }

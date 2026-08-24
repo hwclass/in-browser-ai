@@ -5,7 +5,7 @@ export const TELEMETRY_WORKER_PROTOCOL_VERSION = "telemetry.worker.v1";
 export type ObservationPromptMessage = {
   protocolVersion: typeof TELEMETRY_WORKER_PROTOCOL_VERSION;
   messageId: string;
-  type: "observation.prompt";
+  type: "observation.prompt" | "observation.promptStreaming";
   createdAt: string;
   payload: PromptObservationInput;
 };
@@ -37,7 +37,7 @@ export function createObservationMessage(
   return {
     protocolVersion: TELEMETRY_WORKER_PROTOCOL_VERSION,
     messageId: options.messageId || payload.observationId,
-    type: "observation.prompt",
+    type: payload.operation === "promptStreaming" ? "observation.promptStreaming" : "observation.prompt",
     createdAt: options.createdAt || new Date().toISOString(),
     payload
   };
@@ -50,7 +50,12 @@ export function isTelemetryWorkerMessage(value: unknown): value is TelemetryWork
     record.protocolVersion === TELEMETRY_WORKER_PROTOCOL_VERSION &&
     typeof record.messageId === "string" &&
     typeof record.createdAt === "string" &&
-    (record.type === "observation.prompt" || record.type === "worker.ready" || record.type === "worker.control") &&
+    (
+      record.type === "observation.prompt" ||
+      record.type === "observation.promptStreaming" ||
+      record.type === "worker.ready" ||
+      record.type === "worker.control"
+    ) &&
     typeof record.payload === "object" &&
     record.payload !== null
   );

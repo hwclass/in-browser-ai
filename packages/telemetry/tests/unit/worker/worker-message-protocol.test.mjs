@@ -29,3 +29,30 @@ assert.deepEqual(JSON.parse(JSON.stringify(message)), message);
 assert.equal("input" in message.payload, false);
 assert.equal("output" in message.payload, false);
 assert.equal(isTelemetryWorkerMessage({ type: "observation.prompt" }), false);
+
+const streamingMessage = createObservationMessage({
+  messageId: "msg_stream",
+  observationId: "obs_stream",
+  sessionId: "session_1",
+  operationId: "op_stream",
+  operation: "promptStreaming",
+  startedAt: 1,
+  endedAt: 5,
+  outcome: "success",
+  runtime: {
+    runtimeType: "prompt-api",
+    availability: "available",
+    streamingSupport: "supported",
+    structuredOutputSupport: "unknown"
+  },
+  stream: {
+    outputCount: 2,
+    producedOutput: true,
+    timeToFirstOutputMs: 1
+  }
+});
+
+assert.equal(streamingMessage.type, "observation.promptStreaming");
+assert.equal(isTelemetryWorkerMessage(streamingMessage), true);
+assert.deepEqual(JSON.parse(JSON.stringify(streamingMessage)), streamingMessage);
+assert.equal("chunks" in streamingMessage.payload, false);

@@ -1,9 +1,11 @@
 import type { ObservationOutcome, RuntimeSummary } from "../../../core/observation/types.js";
+import { normalizeError } from "../../../core/observation/normalize-observation.js";
 import { extractUsageContext } from "./extract-usage-context.js";
 import type { WorkerBridge } from "../../worker/worker-bridge.js";
 
 export type PromptApiSession = {
   prompt(input: unknown, options?: unknown): Promise<unknown>;
+  promptStreaming?: (input: unknown, options?: unknown) => AsyncIterable<unknown> | ReadableStream<unknown>;
 };
 
 export type PromptObservationShellOptions = {
@@ -57,7 +59,7 @@ export function createPromptObservationShell(options: PromptObservationShellOpti
         endedAt,
         outcome: classifyOutcome(error),
         runtime: options.runtime,
-        error,
+        error: normalizeError(error),
         usage: metadata.usage,
         context: metadata.context
       }).catch(() => undefined);
