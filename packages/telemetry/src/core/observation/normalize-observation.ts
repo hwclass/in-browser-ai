@@ -45,7 +45,8 @@ export function normalizePromptObservation(input: PromptObservationInput): Telem
     endedAt: toIsoTimestamp(input.endedAt),
     durationMs: durationMs(input.startedAt, input.endedAt),
     outcome: input.outcome,
-    runtime: input.runtime
+    runtime: input.runtime,
+    capture: input.capture
   };
 
   const error = normalizeError(input.error);

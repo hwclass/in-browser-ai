@@ -1,3 +1,5 @@
+import type { CaptureResult } from "../capture/types.js";
+
 export type OperationType = "prompt" | "promptStreaming";
 
 export type ObservationOutcome = "success" | "error" | "cancelled";
@@ -58,6 +60,7 @@ export type PromptObservationInput = {
   error?: unknown;
   usage?: InferenceUsage;
   context?: InferenceContext;
+  capture: CaptureResult;
   stream?: StreamingSummary & {
     timeToFirstOutputMs?: number;
   };
@@ -78,5 +81,6 @@ export type TelemetryObservation = {
   runtime: RuntimeSummary;
   usage?: InferenceUsage;
   context?: InferenceContext;
+  capture: CaptureResult;
   stream?: StreamingSummary;
 };

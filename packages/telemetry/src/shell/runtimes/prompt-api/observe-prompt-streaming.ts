@@ -1,15 +1,18 @@
 import type { ObservationOutcome, RuntimeSummary } from "../../../core/observation/types.js";
 import { normalizeError } from "../../../core/observation/normalize-observation.js";
 import { createStreamingTimingTracker } from "../../../core/observation/streaming-timing.js";
+import type { CaptureMode } from "../../../core/capture/types.js";
 import type { WorkerBridge } from "../../worker/worker-bridge.js";
 import type { PromptApiSession } from "./observe-prompt.js";
 import { extractUsageContext } from "./extract-usage-context.js";
+import { buildPromptObservationPayload } from "./build-observation-message.js";
 
 export type PromptStreamingObservationShellOptions = {
   session: PromptApiSession;
   bridge: WorkerBridge;
   sessionId: string;
   runtime: RuntimeSummary;
+  captureMode: CaptureMode;
   idGenerator: () => string;
   now?: () => number;
 };
@@ -17,6 +20,8 @@ export type PromptStreamingObservationShellOptions = {
 type StreamSummaryState = {
   outputCount: number;
   producedOutput: boolean;
+  outputCharacters: number;
+  capturedOutput: string;
 };
 
 function classifyOutcome(error: unknown): ObservationOutcome {
@@ -54,12 +59,15 @@ export function createPromptStreamingObservationShell(options: PromptStreamingOb
     const observationId = options.idGenerator();
     const startedAt = now();
     const timing = createStreamingTimingTracker(startedAt);
-    const state: StreamSummaryState = { outputCount: 0, producedOutput: false };
+    const state: StreamSummaryState = { outputCount: 0, producedOutput: false, outputCharacters: 0, capturedOutput: "" };
     let finalized = false;
 
     const recordOutput = (chunk: unknown): void => {
       state.outputCount += 1;
       if (!chunkProducedOutput(chunk)) return;
+      const text = typeof chunk === "string" ? chunk : String(chunk);
+      state.outputCharacters += text.length;
+      if (options.captureMode !== "metadata") state.capturedOutput += text;
       state.producedOutput = true;
       timing.recordOutput(now());
     };
@@ -68,7 +76,8 @@ export function createPromptStreamingObservationShell(options: PromptStreamingOb
       if (finalized) return;
       finalized = true;
       const metadata = extractUsageContext(options.session);
-      await options.bridge.postObservation({
+      await options.bridge.postObservation(buildPromptObservationPayload({
+        captureMode: options.captureMode,
         observationId,
         sessionId: options.sessionId,
         operationId,
@@ -80,12 +89,15 @@ export function createPromptStreamingObservationShell(options: PromptStreamingOb
         error: normalizeError(error),
         usage: metadata.usage,
         context: metadata.context,
+        input,
+        output: options.captureMode === "metadata" ? undefined : state.capturedOutput,
+        outputCharacters: state.outputCharacters,
         stream: {
           outputCount: state.outputCount,
           producedOutput: state.producedOutput,
           timeToFirstOutputMs: timing.firstOutputAt === undefined ? undefined : Math.max(0, timing.firstOutputAt - startedAt)
         }
-      }).catch(() => undefined);
+      })).catch(() => undefined);
     };
 
     let nativeStream: AsyncIterable<unknown> | ReadableStream<unknown>;

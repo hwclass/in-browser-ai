@@ -3,6 +3,9 @@ import { readFile } from "fs/promises";
 import { normalizePromptObservation } from "../../../dist/src/core/observation/normalize-observation.js";
 
 const coreFiles = [
+  "packages/telemetry/src/core/capture/apply-capture-policy.ts",
+  "packages/telemetry/src/core/capture/redact-content.ts",
+  "packages/telemetry/src/core/capture/types.ts",
   "packages/telemetry/src/core/observation/types.ts",
   "packages/telemetry/src/core/observation/normalize-observation.ts",
   "packages/telemetry/src/core/observation/timing.ts"

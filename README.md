@@ -114,3 +114,36 @@ to the telemetry Worker merely for telemetry. The telemetry path emits one
 normalized streaming summary observation with output count, whether output was
 produced, TTFO when output exists, total duration, outcome, runtime details, and
 safe usage/context data where available.
+
+## Slice 3 Capture Modes
+
+Telemetry capture defaults to `metadata`:
+
+```ts
+observePromptApi({
+  session,
+  capture: "metadata"
+});
+```
+
+Supported modes are:
+
+- `metadata`: emits timing, runtime, usage/context when available, and character
+  counts; raw prompt, response, private document text, and streaming chunks are
+  absent from Worker messages and normalized observations.
+- `redacted`: explicit opt-in; prompt/response content is transformed locally
+  into deterministic placeholders like `[redacted 42 chars]` before it can cross
+  the Worker boundary.
+- `full`: explicit opt-in; prompt/response content may appear in telemetry.
+  Invalid or unknown configuration falls back to `metadata`, never to `full`.
+
+Run the privacy example:
+
+```bash
+npm run build
+npm run examples
+```
+
+Open `http://127.0.0.1:4173/examples/private-document-summary/`. The page
+starts in metadata mode and shows that the private document and generated
+summary remain local while telemetry is still exported and inspectable.

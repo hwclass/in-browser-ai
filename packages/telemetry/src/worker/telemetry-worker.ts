@@ -1,6 +1,7 @@
 import { normalizePromptObservation } from "../core/observation/normalize-observation.js";
 import type { TelemetryObservation } from "../core/observation/types.js";
 import { isTelemetryWorkerMessage, type TelemetryWorkerMessage } from "../shell/worker/protocol.js";
+import { validateTelemetryWorkerMessage } from "../shell/worker/validate-message.js";
 
 export type WorkerDelivery = {
   deliver(observation: TelemetryObservation): Promise<void> | void;
@@ -17,7 +18,7 @@ export async function processTelemetryWorkerMessage(
 }
 
 export function isProcessableWorkerMessage(message: unknown): message is TelemetryWorkerMessage {
-  return isTelemetryWorkerMessage(message);
+  return isTelemetryWorkerMessage(message) && validateTelemetryWorkerMessage(message);
 }
 
 const workerGlobal = globalThis as typeof globalThis & {

@@ -50,6 +50,11 @@ assert.equal(successSink.observations[0].outcome, "success");
 assert.equal(successSink.observations[0].timeToFirstOutputMs, 20);
 assert.equal(successSink.observations[0].durationMs, 75);
 assert.deepEqual(successSink.observations[0].stream, { outputCount: 3, producedOutput: true });
+assert.deepEqual(successSink.observations[0].capture, {
+  mode: "metadata",
+  inputCharacters: 13,
+  outputCharacters: 11
+});
 assert.equal("input" in successSink.observations[0], false);
 assert.equal("output" in successSink.observations[0], false);
 assert.equal("chunks" in successSink.observations[0], false);
@@ -108,3 +113,53 @@ assert.equal((await iterator.next()).value, "first");
 await iterator.return?.();
 assert.equal(cancelSink.observations[0].outcome, "cancelled");
 assert.deepEqual(cancelSink.observations[0].stream, { outputCount: 1, producedOutput: true });
+
+const redactedStreamingSink = createConsoleSink();
+const redactedStreamingController = observePromptApi({
+  capture: "redacted",
+  session: {
+    promptStreaming(input) {
+      assert.equal(input, "STREAMING_PRIVATE_PROMPT");
+      return (async function* () {
+        yield "STREAMING_PRIVATE_CHUNK_A";
+        yield "STREAMING_PRIVATE_CHUNK_B";
+      })();
+    }
+  },
+  destinations: [redactedStreamingSink.destination],
+  runtime: { availability: "available", streamingSupport: "supported" },
+  now: createClock([500, 510, 520, 530])
+});
+assert.deepEqual(await collect(redactedStreamingController.promptStreaming("STREAMING_PRIVATE_PROMPT")), [
+  "STREAMING_PRIVATE_CHUNK_A",
+  "STREAMING_PRIVATE_CHUNK_B"
+]);
+assert.equal(redactedStreamingSink.observations[0].capture.mode, "redacted");
+assert.equal(redactedStreamingSink.observations[0].capture.input, "[redacted 24 chars]");
+assert.equal(redactedStreamingSink.observations[0].capture.output, "[redacted 50 chars]");
+assert.equal(JSON.stringify(redactedStreamingSink.observations[0]).includes("STREAMING_PRIVATE_PROMPT"), false);
+assert.equal(JSON.stringify(redactedStreamingSink.observations[0]).includes("STREAMING_PRIVATE_CHUNK_A"), false);
+
+const fullStreamingSink = createConsoleSink();
+const fullStreamingController = observePromptApi({
+  capture: "full",
+  session: {
+    promptStreaming(input) {
+      assert.equal(input, "STREAMING_FULL_PROMPT");
+      return (async function* () {
+        yield "STREAMING_FULL_CHUNK_A";
+        yield "STREAMING_FULL_CHUNK_B";
+      })();
+    }
+  },
+  destinations: [fullStreamingSink.destination],
+  runtime: { availability: "available", streamingSupport: "supported" },
+  now: createClock([600, 610, 620, 630])
+});
+assert.deepEqual(await collect(fullStreamingController.promptStreaming("STREAMING_FULL_PROMPT")), [
+  "STREAMING_FULL_CHUNK_A",
+  "STREAMING_FULL_CHUNK_B"
+]);
+assert.equal(fullStreamingSink.observations[0].capture.mode, "full");
+assert.equal(fullStreamingSink.observations[0].capture.input, "STREAMING_FULL_PROMPT");
+assert.equal(fullStreamingSink.observations[0].capture.output, "STREAMING_FULL_CHUNK_ASTREAMING_FULL_CHUNK_B");

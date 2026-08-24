@@ -2,6 +2,7 @@ import type { TelemetryObservation } from "../../core/observation/types.js";
 import { createConsoleDestination, type ConsoleDestination } from "../transport/console-destination.js";
 import { processTelemetryWorkerMessage } from "../../worker/telemetry-worker.js";
 import { createObservationMessage, type ObservationPromptMessage } from "./protocol.js";
+import { validateTelemetryWorkerMessage } from "./validate-message.js";
 
 export type WorkerBridge = {
   readonly mode: "browser-worker" | "in-process";
@@ -17,6 +18,7 @@ function createInProcessBridge(destination: ConsoleDestination): WorkerBridge {
     async postObservation(payload) {
       const message = createObservationMessage(payload);
       const cloned = JSON.parse(JSON.stringify(message)) as ObservationPromptMessage;
+      if (!validateTelemetryWorkerMessage(cloned)) return undefined;
       return processTelemetryWorkerMessage(cloned, delivery);
     },
     async flush() {
@@ -48,6 +50,7 @@ function createBrowserWorkerBridge(destination: ConsoleDestination): WorkerBridg
       postObservation(payload) {
         const message = createObservationMessage(payload);
         const cloned = JSON.parse(JSON.stringify(message)) as ObservationPromptMessage;
+        if (!validateTelemetryWorkerMessage(cloned)) return Promise.resolve(undefined);
         return new Promise<TelemetryObservation | undefined>((resolve) => {
           pending.set(cloned.messageId, resolve);
           worker.postMessage(cloned);

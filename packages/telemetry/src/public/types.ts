@@ -1,3 +1,4 @@
+import type { CaptureMode } from "../core/capture/types.js";
 import type { RuntimeAvailability, SupportStatus } from "../core/observation/types.js";
 import type { ConsoleDestination } from "../shell/transport/console-destination.js";
 import type { PromptApiSession } from "../shell/runtimes/prompt-api/observe-prompt.js";
@@ -20,6 +21,7 @@ export type RuntimeConfig = {
 
 export type TelemetryOptions = {
   session: PromptApiSession;
+  capture?: CaptureMode;
   destinations?: ConsoleDestination[];
   runtime?: RuntimeConfig;
   now?: () => number;

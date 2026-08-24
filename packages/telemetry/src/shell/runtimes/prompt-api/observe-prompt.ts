@@ -1,6 +1,8 @@
 import type { ObservationOutcome, RuntimeSummary } from "../../../core/observation/types.js";
 import { normalizeError } from "../../../core/observation/normalize-observation.js";
+import type { CaptureMode } from "../../../core/capture/types.js";
 import { extractUsageContext } from "./extract-usage-context.js";
+import { buildPromptObservationPayload } from "./build-observation-message.js";
 import type { WorkerBridge } from "../../worker/worker-bridge.js";
 
 export type PromptApiSession = {
@@ -13,6 +15,7 @@ export type PromptObservationShellOptions = {
   bridge: WorkerBridge;
   sessionId: string;
   runtime: RuntimeSummary;
+  captureMode: CaptureMode;
   idGenerator: () => string;
   now?: () => number;
 };
@@ -34,7 +37,8 @@ export function createPromptObservationShell(options: PromptObservationShellOpti
       const result = await options.session.prompt(input, promptOptions);
       const endedAt = now();
       const metadata = extractUsageContext(options.session);
-      await options.bridge.postObservation({
+      await options.bridge.postObservation(buildPromptObservationPayload({
+        captureMode: options.captureMode,
         observationId: options.idGenerator(),
         sessionId: options.sessionId,
         operationId,
@@ -44,13 +48,16 @@ export function createPromptObservationShell(options: PromptObservationShellOpti
         outcome: "success",
         runtime: options.runtime,
         usage: metadata.usage,
-        context: metadata.context
-      }).catch(() => undefined);
+        context: metadata.context,
+        input,
+        output: result
+      })).catch(() => undefined);
       return result;
     } catch (error) {
       const endedAt = now();
       const metadata = extractUsageContext(options.session);
-      await options.bridge.postObservation({
+      await options.bridge.postObservation(buildPromptObservationPayload({
+        captureMode: options.captureMode,
         observationId: options.idGenerator(),
         sessionId: options.sessionId,
         operationId,
@@ -61,8 +68,9 @@ export function createPromptObservationShell(options: PromptObservationShellOpti
         runtime: options.runtime,
         error: normalizeError(error),
         usage: metadata.usage,
-        context: metadata.context
-      }).catch(() => undefined);
+        context: metadata.context,
+        input
+      })).catch(() => undefined);
       throw error;
     }
   };

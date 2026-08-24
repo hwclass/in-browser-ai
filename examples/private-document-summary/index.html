@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Private Document Summary</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        color: #172026;
+        background: #f7f8fa;
+      }
+      main {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 32px 20px;
+      }
+      textarea, pre, button, select {
+        font: inherit;
+      }
+      textarea {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 150px;
+      }
+      button {
+        margin: 12px 0;
+        padding: 8px 12px;
+      }
+      label {
+        display: block;
+        margin-top: 14px;
+        margin-bottom: 6px;
+        font-weight: 650;
+      }
+      pre {
+        overflow: auto;
+        padding: 12px;
+        background: #fff;
+        border: 1px solid #d8dde3;
+      }
+      #privacy-status {
+        padding: 10px 12px;
+        background: #eef7f1;
+        border: 1px solid #b9dfc7;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Private Document Summary</h1>
+      <label for="capture-mode">Capture Mode</label>
+      <select id="capture-mode" data-testid="capture-mode">
+        <option value="metadata">metadata</option>
+        <option value="redacted">redacted</option>
+        <option value="full">full</option>
+      </select>
+      <p id="privacy-status" data-testid="privacy-status">Content stayed local: metadata telemetry excludes prompt and response text.</p>
+      <label for="document">Private Document</label>
+      <textarea id="document" data-testid="document">PRIVATE_DOCUMENT_SENTINEL: Contract renewal date is October 15. Payment terms are net 30. Internal salary discussion must stay local.</textarea>
+      <button id="summarize">Summarize</button>
+      <h2>Application Result</h2>
+      <pre id="result" data-testid="result">Waiting</pre>
+      <h2>Telemetry</h2>
+      <pre id="telemetry" data-testid="telemetry">Waiting</pre>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
