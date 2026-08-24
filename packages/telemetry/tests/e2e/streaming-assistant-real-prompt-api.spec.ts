@@ -308,6 +308,9 @@ test("streaming-assistant exercises the real Chrome Prompt API streaming Worker 
   expect(state.latestTelemetry?.stream?.producedOutput).toBe(true);
   expect(state.latestTelemetry?.timeToFirstOutputMs).toBeGreaterThan(0);
   expect(state.latestTelemetry?.durationMs).toBeGreaterThanOrEqual(state.latestTelemetry?.timeToFirstOutputMs || 0);
-  expect(actualEvidence.workerMessages).toHaveLength(1);
+  const observationMessages = actualEvidence.workerMessages.filter((message) => {
+    return (message as { type?: unknown }).type === "observation.promptStreaming";
+  });
+  expect(observationMessages).toHaveLength(1);
   expect(JSON.stringify(actualEvidence.workerMessages)).not.toContain(actualEvidence.resultText.slice(0, 80));
 });

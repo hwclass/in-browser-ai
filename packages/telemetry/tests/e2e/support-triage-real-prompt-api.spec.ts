@@ -381,7 +381,10 @@ test("support-triage exercises the real Chrome Prompt API Worker telemetry path"
 
   const workerMessages = actualEvidence.workerMessages;
   expect(workerMessages.length).toBeGreaterThan(0);
-  expect(workerMessages[0]).toMatchObject({
+  const observationMessage = workerMessages.find((message) => {
+    return (message as { type?: unknown }).type === "observation.prompt";
+  });
+  expect(observationMessage).toMatchObject({
     protocolVersion: "telemetry.worker.v1",
     type: "observation.prompt",
     payload: {

@@ -8,6 +8,7 @@ export function normalizeDeliverySuccess(input: {
   startedAt?: string;
   endedAt?: string;
   payloadBytes?: number;
+  finalAttempt?: boolean;
 }): DeliveryAttempt {
   return { ...input, status: "sent" };
 }
@@ -20,6 +21,7 @@ export function normalizeDeliveryFailure(input: {
   startedAt?: string;
   endedAt?: string;
   payloadBytes?: number;
+  finalAttempt?: boolean;
 }): DeliveryAttempt {
   return {
     destinationId: input.destinationId,
@@ -29,6 +31,7 @@ export function normalizeDeliveryFailure(input: {
     ...(input.startedAt ? { startedAt: input.startedAt } : {}),
     ...(input.endedAt ? { endedAt: input.endedAt } : {}),
     ...(input.payloadBytes !== undefined ? { payloadBytes: input.payloadBytes } : {}),
+    ...(input.finalAttempt !== undefined ? { finalAttempt: input.finalAttempt } : {}),
     error: normalizeError(input.error)
   };
 }

@@ -88,6 +88,12 @@ function initialState(mode) {
     modelState: "not-started",
     sessionState: "not-started",
     promptState: "not-started",
+    startupQueuedCount: 0,
+    startupDroppedCount: 0,
+    startupDrainedCount: 0,
+    destinationSentCount: 0,
+    destinationFailedCount: 0,
+    lifecycleFlushCount: 0,
     telemetryCount: observations.length
   };
 }
@@ -132,6 +138,7 @@ function createController(session, availability) {
             workerOperational: controller?.status.workerOperational,
             latestTelemetry: observation
           });
+          renderTelemetry();
           globalThis.console.log("[support-triage telemetry]", observation);
         }
       }
@@ -140,6 +147,32 @@ function createController(session, availability) {
       availability,
       browserFamily: "chromium",
       browserMajor: Number(detectChromeVersion())
+    },
+    onStatus(status) {
+      const current = globalWithPromptApi.__supportTriageState || initialState(selectedMode());
+      if (status.type === "worker.starting" || status.type === "worker.ready") {
+        setState({ workerStatus: status.type });
+      } else if (status.type === "worker.failed" || status.type === "worker.processingFailed") {
+        setState({ workerStatus: status.type, workerFailure: errorText(status.error) });
+      } else if (status.type === "startupQueue.queued") {
+        setState({ startupQueuedCount: status.queuedCount });
+      } else if (status.type === "startupQueue.dropped") {
+        setState({ startupDroppedCount: status.droppedCount });
+      } else if (status.type === "startupQueue.drained") {
+        setState({ startupDrainedCount: status.drainedCount, startupQueuedCount: 0 });
+      } else if (status.type === "destination.sent") {
+        setState({ destinationSentCount: (current.destinationSentCount || 0) + 1 });
+      } else if (status.type === "destination.failed") {
+        setState({ destinationFailedCount: (current.destinationFailedCount || 0) + 1 });
+      } else if (status.type === "lifecycle.flushAttempted") {
+        setState({
+          lifecycleFlushCount: (current.lifecycleFlushCount || 0) + 1,
+          lastLifecycleFlushReason: status.reason,
+          lastLifecyclePendingCount: status.pendingCount,
+          lastLifecycleKeepalive: status.keepalive
+        });
+      }
+      renderTelemetry();
     }
   });
 }

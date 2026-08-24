@@ -41,8 +41,11 @@ test("streaming-assistant exercises deterministic streaming telemetry timing", a
   const workerMessages = await page.evaluate(() => {
     return (window as typeof window & { __telemetryWorkerMessages?: unknown[] }).__telemetryWorkerMessages || [];
   });
-  expect(workerMessages).toHaveLength(1);
-  expect(workerMessages[0]).toMatchObject({
+  const observationMessages = workerMessages.filter((message) => {
+    return (message as { type?: unknown }).type === "observation.promptStreaming";
+  });
+  expect(observationMessages).toHaveLength(1);
+  expect(observationMessages[0]).toMatchObject({
     protocolVersion: "telemetry.worker.v1",
     type: "observation.promptStreaming",
     payload: {

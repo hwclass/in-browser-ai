@@ -34,7 +34,9 @@ test("private-document-summary keeps content out of metadata telemetry and requi
   const metadataWorkerMessages = await page.evaluate(() => {
     return (window as typeof window & { __telemetryWorkerMessages?: unknown[] }).__telemetryWorkerMessages || [];
   });
-  expect(metadataWorkerMessages).toHaveLength(1);
+  expect(metadataWorkerMessages.some((message) => {
+    return (message as { type?: unknown }).type === "observation.prompt";
+  })).toBe(true);
   expect(JSON.stringify(metadataWorkerMessages)).not.toContain("PRIVATE_DOCUMENT_SENTINEL");
   expect(JSON.stringify(metadataWorkerMessages)).not.toContain("CONFIDENTIAL_SUMMARY_SENTINEL");
 

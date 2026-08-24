@@ -12,7 +12,8 @@ function payloadBytes(value: string): number {
 
 export async function deliverObservation(
   observation: TelemetryObservation,
-  destinations: DestinationConfig[] | undefined
+  destinations: DestinationConfig[] | undefined,
+  options: { keepalive?: boolean; finalAttempt?: boolean } = {}
 ): Promise<DeliveryAttempt[]> {
   const commands = planDeliveries(observation, destinations);
   const attempts = await Promise.all(commands.map(async (command): Promise<DeliveryAttempt> => {
@@ -23,7 +24,7 @@ export async function deliverObservation(
         await createConsoleDestination(command.destination).deliver(observation);
       } else {
         body = JSON.stringify(mapToOtlpHttpJson(observation));
-        await postOtlpHttpJson(command.destination, body);
+        await postOtlpHttpJson(command.destination, body, undefined, { keepalive: options.keepalive });
       }
       return normalizeDeliverySuccess({
         destinationId: command.destinationId,
@@ -31,7 +32,8 @@ export async function deliverObservation(
         observationId: observation.observationId,
         startedAt,
         endedAt: new Date().toISOString(),
-        payloadBytes: body ? payloadBytes(body) : undefined
+        payloadBytes: body ? payloadBytes(body) : undefined,
+        finalAttempt: options.finalAttempt
       });
     } catch (error) {
       return normalizeDeliveryFailure({
@@ -41,7 +43,8 @@ export async function deliverObservation(
         error,
         startedAt,
         endedAt: new Date().toISOString(),
-        payloadBytes: body ? payloadBytes(body) : undefined
+        payloadBytes: body ? payloadBytes(body) : undefined,
+        finalAttempt: options.finalAttempt
       });
     }
   }));

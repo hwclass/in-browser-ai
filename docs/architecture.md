@@ -160,3 +160,54 @@ kind of failure changes `prompt()` or `promptStreaming()` application behavior.
 Streaming remains summary-oriented. A streaming operation still emits one
 normalized telemetry observation after stream completion, cancellation, or
 failure; OTLP does not receive per-chunk events.
+
+## Slice 5 Failure And Lifecycle Isolation
+
+Slice 5 keeps the same Functional Core / Imperative Shell split while adding
+operational safeguards around the Worker and page lifecycle:
+
+```text
+Prompt API shell
+        |
+capture policy
+        |
+bounded startup queue
+        |
+typed asynchronous Worker protocol
+        |
+Dedicated Worker normalization and delivery
+        |
+console / OTLP attempts
+
+visibility hidden / pagehide
+        |
+best-effort flush request
+        |
+Worker fetch delivery with keepalive where applicable
+```
+
+The startup queue is an in-memory shell concern. It preserves observations
+created before the Worker reports ready, drains them in order, and uses
+deterministic overflow by dropping the newest observation when capacity is
+exhausted. Queued messages have already passed capture policy before entering
+the queue. In metadata mode, raw prompt, response, private document, and
+generated chunk content still do not cross the Worker boundary.
+
+Worker initialization and processing failures are fail-open. The public shell
+reports status diagnostics, clears unsafe pending state where needed, and
+preserves Prompt API application semantics. A telemetry failure must not turn a
+successful inference into a failure, mask a Prompt API error, or replace
+cancellation behavior. Slice 5 intentionally does not add Worker restart,
+supervision, or recovery loops.
+
+Lifecycle delivery is best effort. The browser shell listens to
+`visibilitychange` when the page becomes hidden and to `pagehide`; it avoids
+`unload` and `beforeunload`. A lifecycle event sends a typed asynchronous
+flush request to the Worker and uses `keepalive` for eligible OTLP fetches.
+Routine OTLP delivery remains Worker-side `fetch()`.
+
+The PoC does not promise durable delivery, exactly-once delivery, retry/outbox
+guarantees, or completion after the browser terminates execution. `sendBeacon`
+is only modeled as a constrained optional fallback boundary for destinations
+that need no custom headers; it is not the normal OTLP exporter and does not
+upgrade capture or routing semantics.

@@ -3,8 +3,12 @@ import { resolveCaptureMode } from "../core/capture/apply-capture-policy.js";
 import { createPromptObservationShell } from "../shell/runtimes/prompt-api/observe-prompt.js";
 import { createPromptStreamingObservationShell } from "../shell/runtimes/prompt-api/observe-prompt-streaming.js";
 import { createWorkerBridge } from "../shell/worker/worker-bridge.js";
+import { createLifecycleFlush } from "../shell/lifecycle/flush-pending.js";
+import { observePageLifecycle } from "../shell/lifecycle/page-lifecycle.js";
 import { validateDestinations } from "./validate-options.js";
-import type { TelemetryController, TelemetryOptions } from "./types.js";
+import type { TelemetryController, TelemetryOptions, TelemetryStatus } from "./types.js";
+import type { WorkerBridge } from "../shell/worker/worker-bridge.js";
+import type { StartupQueueSnapshot } from "../core/batching/types.js";
 
 let idSequence = 0;
 
@@ -17,29 +21,80 @@ export function observePromptApi(options: TelemetryOptions): TelemetryController
   const runtime = inspectPromptApiAvailability(options.runtime);
   const captureMode = resolveCaptureMode(options.capture);
   const destinations = validateDestinations(options.destinations) || [{ type: "console" as const, id: "console" }];
-  const bridge = createWorkerBridge(destinations, (attempt) => {
-    if (attempt.status === "sent") {
-      options.onStatus?.({ type: "destination.sent", destinationId: attempt.destinationId, observationId: attempt.observationId, attempt });
-    } else if (attempt.status === "failed") {
+  let bridgeRef: WorkerBridge | undefined;
+  const status = {
+    ready: true,
+    workerMode: "in-process" as WorkerBridge["mode"],
+    workerOperational: false,
+    startupQueue: {
+      capacity: options.worker?.startupQueueCapacity ?? 8,
+      queuedCount: 0,
+      droppedCount: 0,
+      drainStatus: "not-ready" as const
+    } as StartupQueueSnapshot
+  };
+  const emitStatus = (next: TelemetryStatus): void => {
+    if (bridgeRef) {
+      status.workerOperational = bridgeRef.isOperational();
+      status.startupQueue = bridgeRef.snapshot().startupQueue;
+    }
+    options.onStatus?.(next);
+  };
+  const bridge = createWorkerBridge(destinations, (event) => {
+    if (bridgeRef) {
+      status.workerOperational = bridgeRef.isOperational();
+      status.startupQueue = bridgeRef.snapshot().startupQueue;
+    }
+    if ("status" in event && event.status === "sent") {
+      options.onStatus?.({ type: "destination.sent", destinationId: event.destinationId, observationId: event.observationId, attempt: event });
+    } else if ("status" in event && event.status === "failed") {
       options.onStatus?.({
         type: "destination.failed",
-        destinationId: attempt.destinationId,
-        observationId: attempt.observationId,
-        error: attempt.error,
-        attempt
+        destinationId: event.destinationId,
+        observationId: event.observationId,
+        error: event.error,
+        attempt: event
       });
+    } else {
+      options.onStatus?.(event as TelemetryStatus);
     }
-  });
-  const status = { ready: true, workerMode: bridge.mode, workerOperational: bridge.mode === "in-process" };
+  }, options.worker);
+  bridgeRef = bridge;
+  status.workerMode = bridge.mode;
+  status.workerOperational = bridge.isOperational();
+  status.startupQueue = bridge.snapshot().startupQueue;
   const observedBridge = {
     ...bridge,
     async postObservation(payload: Parameters<typeof bridge.postObservation>[0]) {
       const observation = await bridge.postObservation(payload);
-      if (observation) status.workerOperational = true;
+      status.workerOperational = bridge.isOperational();
+      status.startupQueue = bridge.snapshot().startupQueue;
       return observation;
     }
   };
-  options.onStatus?.({ type: "worker.ready" });
+  if (bridge.isOperational()) options.onStatus?.({ type: "worker.ready" });
+
+  const lifecycleFlush = createLifecycleFlush({
+    pendingCount: () => bridge.snapshot().startupQueue.queuedCount,
+    flush: (request) => bridge.flush(request),
+    onStatus: emitStatus
+  });
+  const lifecycleEnabled = options.lifecycle?.enabled !== false;
+  const lifecycle = lifecycleEnabled && typeof document !== "undefined" && typeof window !== "undefined"
+    ? observePageLifecycle({
+      document,
+      window,
+      flush: () => {
+        void lifecycleFlush({
+          reason: "lifecycle",
+          keepalive: true,
+          allowBeaconFallback: options.lifecycle?.allowBeaconFallback
+        });
+      },
+      flushOnVisibilityHidden: options.lifecycle?.flushOnVisibilityHidden,
+      flushOnPageHide: options.lifecycle?.flushOnPageHide
+    })
+    : undefined;
 
   const sessionId = nextId("session");
   const prompt = createPromptObservationShell({
@@ -66,9 +121,10 @@ export function observePromptApi(options: TelemetryOptions): TelemetryController
     status,
     prompt,
     promptStreaming,
-    flush: () => bridge.flush(),
+    flush: (request) => bridge.flush(request),
     async stop() {
-      await bridge.flush();
+      await bridge.flush({ reason: "stop", keepalive: true, allowBeaconFallback: options.lifecycle?.allowBeaconFallback });
+      lifecycle?.stop();
       status.ready = false;
     }
   };

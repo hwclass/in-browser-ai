@@ -5,12 +5,13 @@ export type FetchResult = {
   status: number;
 };
 
-export type FetchLike = (input: string, init: { method: string; headers: Record<string, string>; body: string }) => Promise<{ ok: boolean; status: number }>;
+export type FetchLike = (input: string, init: { method: string; headers: Record<string, string>; body: string; keepalive?: boolean }) => Promise<{ ok: boolean; status: number }>;
 
 export async function postOtlpHttpJson(
   destination: OtlpDestinationConfig,
   body: string,
-  fetcher?: FetchLike
+  fetcher?: FetchLike,
+  options: { keepalive?: boolean } = {}
 ): Promise<FetchResult> {
   const activeFetch = fetcher || globalThis.fetch?.bind(globalThis);
   if (!activeFetch) throw new TypeError("fetch is unavailable for OTLP delivery");
@@ -21,7 +22,8 @@ export async function postOtlpHttpJson(
       "content-type": "application/json",
       ...(destination.headers || {})
     },
-    body
+    body,
+    ...(options.keepalive ? { keepalive: true } : {})
   });
 
   if (!response.ok) {

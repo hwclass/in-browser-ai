@@ -193,3 +193,34 @@ npm run examples
 Open `http://127.0.0.1:4173/examples/ecommerce-extraction/`. The example
 defaults to metadata capture and `console + OTLP` delivery against the local
 test endpoint served by the example server.
+
+## Slice 5 Failure And Lifecycle Isolation
+
+Telemetry remains fail-open. Worker startup, Worker processing, console
+delivery, and OTLP delivery failures are surfaced through `onStatus` diagnostics
+but must not replace successful Prompt API results, thrown Prompt API errors, or
+cancellation behavior.
+
+During Dedicated Worker startup, observation messages are held in a bounded
+in-memory startup queue. The default capacity is 8 messages. The queue drains in
+creation order when the Worker reports ready. If the queue is full, the newest
+observation is dropped and the overflow is reported; existing queued
+observations keep their order. The startup queue stores already-captured
+metadata/redacted/full payloads, so metadata mode still does not send raw
+prompt, response, private document, or generated chunk content across the Worker
+boundary.
+
+Page lifecycle handling makes a final best-effort flush attempt on
+`visibilitychange` to hidden and `pagehide`. Lifecycle requests use the typed
+asynchronous Worker protocol and mark eligible OTLP fetches with `keepalive`
+where the browser allows it. This is not durable delivery: there is no
+IndexedDB outbox, retry guarantee, exactly-once guarantee, `unload`/
+`beforeunload` dependency, Worker restart, or supervision loop in the PoC.
+
+`sendBeacon` is treated as a constrained future-compatible fallback boundary,
+not the routine exporter. The current routine OTLP path remains Worker-side
+`fetch()`; beacon compatibility is limited to destinations that can be sent
+without custom headers.
+
+The support-triage example displays Worker readiness, startup queue, delivery,
+failure, and lifecycle flush diagnostics in its runtime status panel.

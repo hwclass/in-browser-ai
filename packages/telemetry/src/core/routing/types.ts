@@ -39,4 +39,5 @@ export type DeliveryAttempt = {
   endedAt?: string;
   error?: TelemetryError;
   payloadBytes?: number;
+  finalAttempt?: boolean;
 };
