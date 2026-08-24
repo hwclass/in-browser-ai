@@ -1,9 +1,13 @@
 import type { CaptureMode } from "../core/capture/types.js";
 import type { RuntimeAvailability, SupportStatus } from "../core/observation/types.js";
-import type { ConsoleDestination } from "../shell/transport/console-destination.js";
+import type { DeliveryAttempt, DestinationConfig } from "../core/routing/types.js";
 import type { PromptApiSession } from "../shell/runtimes/prompt-api/observe-prompt.js";
 
-export type TelemetryStatus = { type: "worker.ready" } | { type: "worker.failed"; error: unknown };
+export type TelemetryStatus =
+  | { type: "worker.ready" }
+  | { type: "worker.failed"; error: unknown }
+  | { type: "destination.sent"; destinationId: string; observationId: string; attempt: DeliveryAttempt }
+  | { type: "destination.failed"; destinationId: string; observationId: string; error: unknown; attempt: DeliveryAttempt };
 
 export type TelemetryStatusSnapshot = {
   ready: boolean;
@@ -22,11 +26,13 @@ export type RuntimeConfig = {
 export type TelemetryOptions = {
   session: PromptApiSession;
   capture?: CaptureMode;
-  destinations?: ConsoleDestination[];
+  destinations?: DestinationConfig[];
   runtime?: RuntimeConfig;
   now?: () => number;
   onStatus?: (status: TelemetryStatus) => void;
 };
+
+export type { DestinationConfig };
 
 export type TelemetryController = {
   readonly status: TelemetryStatusSnapshot;

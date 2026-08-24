@@ -14,6 +14,25 @@ const types = new Map([
 
 createServer(async (request, response) => {
   const rawPath = new URL(request.url || "/", `http://127.0.0.1:${port}`).pathname;
+  if (request.method === "POST" && rawPath === "/otlp/v1/logs") {
+    request.resume();
+    response.writeHead(204, {
+      "access-control-allow-origin": "*",
+      "access-control-allow-methods": "POST, OPTIONS",
+      "access-control-allow-headers": "content-type"
+    });
+    response.end();
+    return;
+  }
+  if (request.method === "OPTIONS" && rawPath === "/otlp/v1/logs") {
+    response.writeHead(204, {
+      "access-control-allow-origin": "*",
+      "access-control-allow-methods": "POST, OPTIONS",
+      "access-control-allow-headers": "content-type"
+    });
+    response.end();
+    return;
+  }
   let filePath = rawPath === "/" ? "/examples/support-triage/index.html" : rawPath;
   if (filePath.endsWith("/")) filePath += "index.html";
   const absolute = normalize(join(root, filePath));

@@ -147,3 +147,46 @@ npm run examples
 Open `http://127.0.0.1:4173/examples/private-document-summary/`. The page
 starts in metadata mode and shows that the private document and generated
 summary remain local while telemetry is still exported and inspectable.
+
+## Slice 4 Vendor-Neutral Destinations
+
+`observePromptApi` accepts one or more configured destinations:
+
+```ts
+observePromptApi({
+  session,
+  capture: "metadata",
+  destinations: [
+    { type: "console", id: "console" },
+    { type: "otlp", id: "local-otlp", endpoint: "/otlp/v1/logs" }
+  ]
+});
+```
+
+The SDK creates one normalized observation per Prompt API operation, then fans
+that same observation out to each configured destination. Destination routing
+does not rerun capture policy, request more content, or change the application
+result. If a destination fails, other destinations still run and inference
+semantics remain unchanged.
+
+The initial destination types are:
+
+- `console`: writes the normalized observation for local inspection.
+- `otlp`: sends an OTLP/HTTP JSON log export to a browser-compatible endpoint.
+
+Browser OTLP delivery is subject to normal browser constraints including CORS,
+CSP `connect-src`, endpoint availability, and browser networking limits. Use
+local collectors, test endpoints, or public/browser-safe credentials only. Do
+not place private server-side observability credentials, privileged collector
+tokens, cookies, or `Authorization`/API-key headers in browser configuration.
+
+Run the distribution example:
+
+```bash
+npm run build
+npm run examples
+```
+
+Open `http://127.0.0.1:4173/examples/ecommerce-extraction/`. The example
+defaults to metadata capture and `console + OTLP` delivery against the local
+test endpoint served by the example server.

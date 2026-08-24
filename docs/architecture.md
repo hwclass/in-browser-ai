@@ -117,3 +117,46 @@ placeholders and only those placeholders enter the Worker pipeline. For `full`,
 content capture is activated only by the explicit `capture: "full"` option.
 Streaming observation remains one summary event; chunks continue to flow to the
 application in order, and metadata mode does not forward raw generated chunks.
+
+## Slice 4 Destination Distribution
+
+Slice 4 adds destination fanout after capture and normalization:
+
+```text
+Prompt API input/output
+        |
+capture policy
+        |
+typed Worker message
+        |
+Dedicated Worker normalization
+        |
+pure destination plan
+        |
+transport shell
+   |            |
+console     OTLP/HTTP JSON fetch
+```
+
+Capture remains independent from destinations. The routing layer receives only
+the already-permitted normalized observation, so a destination cannot upgrade
+metadata to redacted/full, request additional content, or create another
+inference observation.
+
+The Functional Core owns destination planning and delivery result shaping under
+`packages/telemetry/src/core/routing`. It does not call `fetch()`, access Worker
+globals, write to console, or know it runs in a browser. The transport shell
+maps observations to console and OTLP representations and performs side effects.
+
+OTLP is an outbound interoperability boundary. The internal observation model is
+not OTLP-shaped; `mapToOtlpHttpJson` serializes the normalized observation into
+an OTLP/HTTP JSON log payload at the transport edge.
+
+Destination execution is independent. Console and each OTLP destination produce
+separate delivery attempts. A console failure does not suppress OTLP delivery,
+an OTLP network or HTTP failure does not suppress console delivery, and neither
+kind of failure changes `prompt()` or `promptStreaming()` application behavior.
+
+Streaming remains summary-oriented. A streaming operation still emits one
+normalized telemetry observation after stream completion, cancellation, or
+failure; OTLP does not receive per-chunk events.

@@ -1,12 +1,9 @@
 import type { TelemetryObservation } from "../../core/observation/types.js";
+import type { ConsoleDestinationConfig } from "../../core/routing/types.js";
 
-export type ConsoleDestination = {
-  type: "console";
-  id?: string;
-  write?: (observation: TelemetryObservation) => void;
-};
+export type ConsoleDestination = ConsoleDestinationConfig;
 
-export function createConsoleDestination(destination: ConsoleDestination = { type: "console" }) {
+export function createConsoleDestination(destination: ConsoleDestinationConfig = { type: "console" }) {
   return {
     async deliver(observation: TelemetryObservation): Promise<void> {
       if (destination.write) {

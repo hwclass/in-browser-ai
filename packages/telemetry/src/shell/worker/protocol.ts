@@ -1,4 +1,5 @@
 import type { PromptObservationInput } from "../../core/observation/types.js";
+import type { SerializableDestinationConfig } from "../../core/routing/types.js";
 
 export const TELEMETRY_WORKER_PROTOCOL_VERSION = "telemetry.worker.v1";
 
@@ -7,6 +8,7 @@ export type ObservationPromptMessage = {
   messageId: string;
   type: "observation.prompt" | "observation.promptStreaming";
   createdAt: string;
+  destinations?: SerializableDestinationConfig[];
   payload: PromptObservationInput;
 };
 
@@ -32,13 +34,14 @@ export type TelemetryWorkerMessage = ObservationPromptMessage | WorkerReadyMessa
 
 export function createObservationMessage(
   payload: PromptObservationInput,
-  options: { messageId?: string; createdAt?: string } = {}
+  options: { messageId?: string; createdAt?: string; destinations?: SerializableDestinationConfig[] } = {}
 ): ObservationPromptMessage {
   return {
     protocolVersion: TELEMETRY_WORKER_PROTOCOL_VERSION,
     messageId: options.messageId || payload.observationId,
     type: payload.operation === "promptStreaming" ? "observation.promptStreaming" : "observation.prompt",
     createdAt: options.createdAt || new Date().toISOString(),
+    ...(options.destinations ? { destinations: options.destinations } : {}),
     payload
   };
 }
