@@ -1,7 +1,7 @@
 # Streaming Assistant
 
 This example demonstrates Slice 2 streaming observability for Prompt API
-`promptStreaming()`.
+`promptStreaming()` and the Slice 6 runtime/DX surface for streaming.
 
 ## Deterministic Test Runtime
 
@@ -25,5 +25,15 @@ shows native runtime provenance, availability, Worker mode, Worker operational
 state, incremental output, time to first output, total duration, and normalized
 streaming telemetry.
 
-Slice 2 remains metadata-oriented. Raw generated stream content is not sent to
-the telemetry Worker merely for telemetry.
+The page also exposes existing lifecycle/final-delivery-attempt diagnostics in
+the runtime status panel when a lifecycle transition occurs. This reuses the
+shared lifecycle implementation from Slice 5; support-triage remains the primary
+non-streaming lifecycle proof surface.
+
+Telemetry remains metadata-oriented by default. Raw generated stream content is
+not sent to the telemetry Worker merely for telemetry, and native mode never
+falls back silently to the deterministic fixture.
+
+For screen recording, show the runtime selector, run the stream, point to the
+incremental application output, then inspect TTFO, total duration, Worker state,
+and normalized telemetry.

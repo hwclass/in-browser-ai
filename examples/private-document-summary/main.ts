@@ -1,5 +1,6 @@
 import { observePromptApi, type CaptureMode, type TelemetryController } from "../../packages/telemetry/src/public/index";
-import { captureModeDescription, renderTelemetryPanel, selectedCaptureMode } from "../shared/harness";
+import { captureModeDescription, selectedCaptureMode } from "../shared/harness";
+import { renderTelemetryEvidence } from "../shared/telemetry-panel";
 
 type PrivateDocumentState = {
   captureMode: CaptureMode;
@@ -44,7 +45,7 @@ function setState(update: Partial<PrivateDocumentState>): PrivateDocumentState {
 function renderTelemetry(): void {
   if (!telemetry) return;
   const state = globalWithState.__privateDocumentSummaryState;
-  renderTelemetryPanel(telemetry, [
+  renderTelemetryEvidence(telemetry, [
     { label: "latest", value: observations[observations.length - 1] },
     { label: "status", value: controller?.status },
     {

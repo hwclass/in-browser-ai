@@ -1,5 +1,6 @@
 import { observePromptApi } from "../../packages/telemetry/dist/src/public/index.js";
-import { renderTelemetryPanel, selectedCaptureMode } from "../shared/harness.js";
+import { selectedCaptureMode } from "../shared/harness.js";
+import { renderTelemetryEvidence } from "../shared/telemetry-panel.js";
 
 const listing = document.querySelector("#listing");
 const captureMode = document.querySelector("#capture-mode");
@@ -56,7 +57,7 @@ function renderDeliveryStatus(state = globalWithState.__ecommerceExtractionState
 function renderTelemetry() {
   if (!telemetry) return;
   const state = globalWithState.__ecommerceExtractionState;
-  renderTelemetryPanel(telemetry, [
+  renderTelemetryEvidence(telemetry, [
     { label: "latest", value: observations[observations.length - 1] },
     { label: "status", value: controller?.status },
     {
@@ -67,6 +68,7 @@ function renderTelemetry() {
             destinationMode: state.destinationMode,
             consoleCount: state.consoleCount,
             otlpSentCount: state.otlpSentCount,
+            sharedObservationId: state.sharedObservationId,
             deliveryStatus: state.deliveryStatus,
             workerMode: state.workerMode,
             workerOperational: state.workerOperational
@@ -85,7 +87,11 @@ function destinationsFor(mode) {
       write(observation) {
         observations.push(observation);
         const state = globalWithState.__ecommerceExtractionState;
-        setState({ latestTelemetry: observation, consoleCount: (state?.consoleCount || 0) + 1 });
+        setState({
+          latestTelemetry: observation,
+          sharedObservationId: observation.observationId,
+          consoleCount: (state?.consoleCount || 0) + 1
+        });
         renderTelemetry();
       }
     });
@@ -125,6 +131,7 @@ async function runExtraction() {
       if (status.type === "destination.sent" || status.type === "destination.failed") {
         const current = globalWithState.__ecommerceExtractionState;
         setState({
+          sharedObservationId: status.observationId,
           otlpSentCount: status.type === "destination.sent" && status.destinationId === "local-otlp"
             ? (current?.otlpSentCount || 0) + 1
             : (current?.otlpSentCount || 0),

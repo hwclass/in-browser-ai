@@ -9,6 +9,8 @@ const coreFiles = [
   "packages/telemetry/src/core/observation/types.ts",
   "packages/telemetry/src/core/observation/normalize-observation.ts",
   "packages/telemetry/src/core/observation/timing.ts",
+  "packages/telemetry/src/core/runtime/normalize-runtime.ts",
+  "packages/telemetry/src/core/runtime/types.ts",
   "packages/telemetry/src/core/routing/normalize-delivery-result.ts",
   "packages/telemetry/src/core/routing/plan-deliveries.ts",
   "packages/telemetry/src/core/routing/types.ts"

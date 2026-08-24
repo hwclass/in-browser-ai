@@ -17,7 +17,19 @@ npm run test:e2e:real-prompt-api-streaming
 npm run examples
 ```
 
-Open `http://127.0.0.1:4173/examples/support-triage/`.
+Open `http://127.0.0.1:4173/examples/`.
+
+The examples are the primary developer-facing PoC surface:
+
+- `support-triage`: real browser AI observation, unchanged prompt result,
+  Worker state, queue/lifecycle diagnostics, and normalized telemetry.
+- `streaming-assistant`: incremental streaming output, time to first output,
+  total duration, native runtime provenance, and one streaming summary
+  observation.
+- `private-document-summary`: metadata/redacted/full capture differences, with
+  metadata showing content absent from telemetry.
+- `ecommerce-extraction`: console plus generic OTLP/HTTP JSON fanout, delivery
+  states, and shared observation identity.
 
 ## Slice 1 Capability
 
@@ -224,3 +236,28 @@ without custom headers.
 
 The support-triage example displays Worker readiness, startup queue, delivery,
 failure, and lifecycle flush diagnostics in its runtime status panel.
+
+## Slice 6 Developer Experience And Runtime Characterization
+
+Runtime characterization is observational and low-entropy. The SDK reports
+Prompt API runtime type, availability, browser family/major version,
+streaming support, and structured-output support only when those values are
+provided directly or can be detected safely. Unknown or unavailable values remain
+`unknown`, `unavailable`, or `unsupported`; the PoC does not infer model names,
+model versions, GPU identity, device capacity, or other high-entropy details.
+
+Deterministic example mode is explicitly labeled `DETERMINISTIC TEST RUNTIME`.
+Native mode is explicitly labeled `REAL CHROME PROMPT API` and never falls back
+to the deterministic runtime. Native Prompt API readiness, download/session
+states, and execution failures are shown as runtime/demo state rather than
+marketing claims.
+
+The four examples now share a compact inspection pattern: a purpose statement,
+application result, runtime/capture status, Worker or delivery state where
+useful, and normalized telemetry. This makes the PoC screen-recordable without
+requiring a viewer to know the internal architecture or open DevTools.
+
+Current limitations remain intentional: Prompt API is the only runtime adapter;
+lifecycle delivery is best effort; OTLP is direct browser OTLP/HTTP JSON only;
+there is no secure relay, hosted collector, dashboard, durable outbox, retry
+system, Worker supervision, model routing, or final overhead report in Slice 6.

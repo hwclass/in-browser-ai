@@ -1,5 +1,6 @@
 import { observePromptApi } from "../../packages/telemetry/dist/src/public/index.js";
-import { renderTelemetryPanel } from "../shared/harness.js";
+import { renderRuntimeStatus } from "../shared/runtime-status.js";
+import { renderTelemetryEvidence } from "../shared/telemetry-panel.js";
 
 const ticket = document.querySelector("#ticket");
 const button = document.querySelector("#triage");
@@ -83,6 +84,7 @@ function initialState(mode) {
   return {
     runtimeMode: mode,
     runtimeProvenance: mode === "real" ? (languageModelGlobalPresent ? "native" : "missing") : "deterministic",
+    captureMode: "metadata",
     chromeVersion: detectChromeVersion(),
     languageModelGlobalPresent,
     modelState: "not-started",
@@ -100,7 +102,7 @@ function initialState(mode) {
 
 function renderStatus(state = globalWithPromptApi.__supportTriageState) {
   if (!runtimeStatus || !state) return;
-  runtimeStatus.textContent = JSON.stringify(state, null, 2);
+  renderRuntimeStatus(runtimeStatus, state);
 }
 
 function setState(update) {
@@ -113,7 +115,7 @@ function setState(update) {
 
 function renderTelemetry() {
   if (!telemetry) return;
-  renderTelemetryPanel(telemetry, [
+  renderTelemetryEvidence(telemetry, [
     { label: "latest", value: observations[observations.length - 1] },
     { label: "status", value: controller?.status },
     { label: "runtime", value: globalWithPromptApi.__supportTriageState }

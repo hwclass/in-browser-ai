@@ -18,7 +18,21 @@ function nextId(prefix: string): string {
 }
 
 export function observePromptApi(options: TelemetryOptions): TelemetryController {
-  const runtime = inspectPromptApiAvailability(options.runtime);
+  const navigatorLike = typeof navigator !== "undefined"
+    ? navigator as Navigator & { userAgentData?: { brands?: Array<{ brand: string; version: string }> } }
+    : undefined;
+  const browserLanguageModelPresent = typeof window !== "undefined"
+    ? "LanguageModel" in globalThis
+    : undefined;
+  const runtime = inspectPromptApiAvailability({
+    ...options.runtime,
+    userAgent: navigatorLike?.userAgent,
+    userAgentData: navigatorLike?.userAgentData,
+    languageModelPresent: browserLanguageModelPresent
+  });
+  if (!options.runtime?.streamingSupport && typeof options.session.promptStreaming === "function") {
+    runtime.streamingSupport = "supported";
+  }
   const captureMode = resolveCaptureMode(options.capture);
   const destinations = validateDestinations(options.destinations) || [{ type: "console" as const, id: "console" }];
   let bridgeRef: WorkerBridge | undefined;

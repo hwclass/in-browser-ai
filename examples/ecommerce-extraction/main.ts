@@ -1,5 +1,6 @@
 import { observePromptApi, type CaptureMode, type DestinationConfig, type TelemetryController } from "../../packages/telemetry/src/public/index";
-import { renderTelemetryPanel, selectedCaptureMode } from "../shared/harness";
+import { selectedCaptureMode } from "../shared/harness";
+import { renderTelemetryEvidence } from "../shared/telemetry-panel";
 
 type DestinationMode = "console" | "otlp" | "console-otlp";
 
@@ -8,6 +9,7 @@ type EcommerceExtractionState = {
   destinationMode: DestinationMode;
   applicationResult?: string;
   latestTelemetry?: unknown;
+  sharedObservationId?: string;
   consoleCount: number;
   otlpSentCount: number;
   deliveryStatus: Record<string, string>;
@@ -73,7 +75,7 @@ function renderDeliveryStatus(state = globalWithState.__ecommerceExtractionState
 function renderTelemetry(): void {
   if (!telemetry) return;
   const state = globalWithState.__ecommerceExtractionState;
-  renderTelemetryPanel(telemetry, [
+  renderTelemetryEvidence(telemetry, [
     { label: "latest", value: observations[observations.length - 1] },
     { label: "status", value: controller?.status },
     {
@@ -84,6 +86,7 @@ function renderTelemetry(): void {
             destinationMode: state.destinationMode,
             consoleCount: state.consoleCount,
             otlpSentCount: state.otlpSentCount,
+            sharedObservationId: state.sharedObservationId,
             deliveryStatus: state.deliveryStatus,
             workerMode: state.workerMode,
             workerOperational: state.workerOperational
@@ -102,7 +105,11 @@ function destinationsFor(mode: DestinationMode): DestinationConfig[] {
       write(observation) {
         observations.push(observation);
         const state = globalWithState.__ecommerceExtractionState;
-        setState({ latestTelemetry: observation, consoleCount: (state?.consoleCount || 0) + 1 });
+        setState({
+          latestTelemetry: observation,
+          sharedObservationId: observation.observationId,
+          consoleCount: (state?.consoleCount || 0) + 1
+        });
         renderTelemetry();
       }
     });
@@ -139,10 +146,11 @@ async function runExtraction(): Promise<void> {
     destinations: destinationsFor(activeDestinations),
     runtime: { availability: "available", browserFamily: "chromium" },
     onStatus(status) {
-      if (status.type === "destination.sent" || status.type === "destination.failed") {
-        const current = globalWithState.__ecommerceExtractionState;
-        setState({
-          otlpSentCount: status.type === "destination.sent" && status.destinationId === "local-otlp"
+    if (status.type === "destination.sent" || status.type === "destination.failed") {
+      const current = globalWithState.__ecommerceExtractionState;
+      setState({
+        sharedObservationId: status.observationId,
+        otlpSentCount: status.type === "destination.sent" && status.destinationId === "local-otlp"
             ? (current?.otlpSentCount || 0) + 1
             : (current?.otlpSentCount || 0),
           deliveryStatus: {

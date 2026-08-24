@@ -211,3 +211,47 @@ guarantees, or completion after the browser terminates execution. `sendBeacon`
 is only modeled as a constrained optional fallback boundary for destinations
 that need no custom headers; it is not the normal OTLP exporter and does not
 upgrade capture or routing semantics.
+
+## Slice 6 Runtime Characterization And Examples
+
+Runtime characterization is split between a runtime-neutral core normalizer and
+the Prompt API/browser shell:
+
+```text
+Prompt API/browser shell
+        |
+safe availability and browser signals
+        |
+runtime-neutral normalization
+        |
+observation runtime summary
+        |
+example runtime status panels
+```
+
+The core accepts values and reduces them to the domain shape: runtime type,
+browser family, browser major version, availability, streaming support, and
+structured-output support. It does not inspect `window`, `navigator`,
+`LanguageModel`, Prompt API sessions, model internals, GPU details, device
+capacity, or raw user content. Unknown, unsupported, or unavailable information
+stays explicit rather than being guessed.
+
+The Prompt API shell may inspect browser-safe facts such as user-agent brand
+major version and whether the native `LanguageModel` global is present. It may
+also mark streaming support as supported when the observed session actually
+exposes `promptStreaming()`. Model identifiers, model versions, context limits,
+and usage values are reported only when the runtime exposes them through the
+approved observation model; they are not derived from prompt or response text.
+
+The examples map the architecture to screen-recordable developer surfaces:
+
+- `support-triage`: primary prompt observation surface, real/deterministic
+  runtime mode, Worker state, queue/lifecycle diagnostics, capture mode, and
+  normalized telemetry.
+- `streaming-assistant`: incremental stream consumption, TTFO, total duration,
+  native provenance, Worker state, and existing lifecycle/final-attempt status
+  where useful.
+- `private-document-summary`: metadata/redacted/full capture behavior and
+  visible proof that metadata telemetry omits content.
+- `ecommerce-extraction`: application extraction result, console plus OTLP
+  fanout, delivery state, and shared observation identity.

@@ -1,5 +1,6 @@
 import { observePromptApi, type TelemetryController } from "../../packages/telemetry/src/public/index";
-import { renderTelemetryPanel } from "../shared/harness";
+import { renderRuntimeStatus } from "../shared/runtime-status";
+import { renderTelemetryEvidence } from "../shared/telemetry-panel";
 
 type RuntimeMode = "deterministic" | "real";
 type AvailabilityState = "available" | "downloadable" | "downloading" | "unavailable" | "unknown";
@@ -31,6 +32,7 @@ type NativePromptStreamingSession = {
 type StreamingAssistantState = {
   runtimeMode: RuntimeMode;
   runtimeProvenance: "deterministic" | "native" | "missing";
+  captureMode: "metadata";
   chromeVersion?: string;
   languageModelGlobalPresent: boolean;
   availability?: AvailabilityState;
@@ -52,6 +54,13 @@ type StreamingAssistantState = {
   durationMs?: number;
   workerMode?: string;
   workerOperational?: boolean;
+  workerStatus?: string;
+  destinationSentCount?: number;
+  destinationFailedCount?: number;
+  lifecycleFlushCount?: number;
+  lastLifecycleFlushReason?: string;
+  lastLifecyclePendingCount?: number;
+  lastLifecycleKeepalive?: boolean;
   latestTelemetry?: unknown;
   telemetryCount: number;
 };
@@ -121,18 +130,22 @@ function initialState(mode: RuntimeMode): StreamingAssistantState {
   return {
     runtimeMode: mode,
     runtimeProvenance: mode === "real" ? (languageModelGlobalPresent ? "native" : "missing") : "deterministic",
+    captureMode: "metadata",
     chromeVersion: detectChromeVersion(),
     languageModelGlobalPresent,
     modelState: "not-started",
     sessionState: "not-started",
     streamState: "not-started",
+    destinationSentCount: 0,
+    destinationFailedCount: 0,
+    lifecycleFlushCount: 0,
     telemetryCount: observations.length
   };
 }
 
 function renderStatus(state = globalWithPromptApi.__streamingAssistantState): void {
   if (!runtimeStatus || !state) return;
-  runtimeStatus.textContent = JSON.stringify(state, null, 2);
+  renderRuntimeStatus(runtimeStatus, state);
 }
 
 function setState(update: Partial<StreamingAssistantState>): StreamingAssistantState {
@@ -145,7 +158,7 @@ function setState(update: Partial<StreamingAssistantState>): StreamingAssistantS
 
 function renderTelemetry(): void {
   if (!telemetry) return;
-  renderTelemetryPanel(telemetry, [
+  renderTelemetryEvidence(telemetry, [
     { label: "latest", value: observations[observations.length - 1] },
     { label: "status", value: controller?.status },
     { label: "runtime", value: globalWithPromptApi.__streamingAssistantState }
@@ -159,6 +172,7 @@ function updateRunButtonLabel(): void {
 
 function createController(session: NativePromptStreamingSession, availability: AvailabilityState): TelemetryController {
   return observePromptApi({
+    capture: "metadata",
     session: {
       async prompt() {
         throw new Error("streaming-assistant uses promptStreaming()");
@@ -180,6 +194,7 @@ function createController(session: NativePromptStreamingSession, availability: A
             durationMs: observation.durationMs,
             latestTelemetry: observation
           });
+          renderTelemetry();
           globalThis.console.log("[streaming-assistant telemetry]", observation);
         }
       }
@@ -189,6 +204,24 @@ function createController(session: NativePromptStreamingSession, availability: A
       browserFamily: "chromium",
       browserMajor: Number(detectChromeVersion()),
       streamingSupport: "supported"
+    },
+    onStatus(status) {
+      const current = globalWithPromptApi.__streamingAssistantState || initialState(selectedMode());
+      if (status.type === "worker.starting" || status.type === "worker.ready") {
+        setState({ workerStatus: status.type });
+      } else if (status.type === "destination.sent") {
+        setState({ destinationSentCount: (current.destinationSentCount || 0) + 1 });
+      } else if (status.type === "destination.failed") {
+        setState({ destinationFailedCount: (current.destinationFailedCount || 0) + 1 });
+      } else if (status.type === "lifecycle.flushAttempted") {
+        setState({
+          lifecycleFlushCount: (current.lifecycleFlushCount || 0) + 1,
+          lastLifecycleFlushReason: status.reason,
+          lastLifecyclePendingCount: status.pendingCount,
+          lastLifecycleKeepalive: status.keepalive
+        });
+      }
+      renderTelemetry();
     }
   });
 }

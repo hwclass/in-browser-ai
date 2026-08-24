@@ -1,5 +1,6 @@
 import { observePromptApi } from "../../packages/telemetry/dist/src/public/index.js";
-import { captureModeDescription, renderTelemetryPanel, selectedCaptureMode } from "../shared/harness.js";
+import { captureModeDescription, selectedCaptureMode } from "../shared/harness.js";
+import { renderTelemetryEvidence } from "../shared/telemetry-panel.js";
 
 const documentInput = document.querySelector("#document");
 const captureSelect = document.querySelector("#capture-mode");
@@ -32,7 +33,7 @@ function setState(update) {
 function renderTelemetry() {
   if (!telemetry) return;
   const state = globalWithState.__privateDocumentSummaryState;
-  renderTelemetryPanel(telemetry, [
+  renderTelemetryEvidence(telemetry, [
     { label: "latest", value: observations[observations.length - 1] },
     { label: "status", value: controller?.status },
     {

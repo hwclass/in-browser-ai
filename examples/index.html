@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>in-browser-ai Telemetry Examples</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        color: #172026;
+        background: #f7f8fa;
+      }
+      main {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 32px 20px;
+      }
+      ul {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+        padding: 0;
+      }
+      li {
+        display: block;
+        border: 1px solid #d8dde3;
+        background: #fff;
+        padding: 14px;
+      }
+      a {
+        color: #0b5cad;
+        font-weight: 700;
+      }
+      p {
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>in-browser-ai Telemetry Examples</h1>
+      <p data-testid="examples-purpose">Four Prompt API examples show observation, streaming timing, privacy capture modes, and console/OTLP fanout with inspectable browser telemetry.</p>
+      <ul>
+        <li>
+          <a href="./support-triage/" data-testid="support-triage-link">Support Triage</a>
+          <p>Real browser AI observation, Worker diagnostics, lifecycle status, and unchanged prompt result.</p>
+        </li>
+        <li>
+          <a href="./streaming-assistant/" data-testid="streaming-assistant-link">Streaming Assistant</a>
+          <p>Incremental streaming output, time to first output, total duration, native provenance, and Worker state.</p>
+        </li>
+        <li>
+          <a href="./private-document-summary/" data-testid="private-document-summary-link">Private Document Summary</a>
+          <p>Metadata, redacted, and full capture modes with visible content-exposure differences.</p>
+        </li>
+        <li>
+          <a href="./ecommerce-extraction/" data-testid="ecommerce-extraction-link">Ecommerce Extraction</a>
+          <p>Console plus generic OTLP delivery, fanout status, and shared observation identity.</p>
+        </li>
+      </ul>
+    </main>
+  </body>
+</html>

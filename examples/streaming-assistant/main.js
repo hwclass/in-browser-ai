@@ -1,5 +1,6 @@
 import { observePromptApi } from "../../packages/telemetry/dist/src/public/index.js";
-import { renderTelemetryPanel } from "../shared/harness.js";
+import { renderRuntimeStatus } from "../shared/runtime-status.js";
+import { renderTelemetryEvidence } from "../shared/telemetry-panel.js";
 
 const promptInput = document.querySelector("#prompt");
 const button = document.querySelector("#run");
@@ -62,18 +63,22 @@ function initialState(mode) {
   return {
     runtimeMode: mode,
     runtimeProvenance: mode === "real" ? (languageModelGlobalPresent ? "native" : "missing") : "deterministic",
+    captureMode: "metadata",
     chromeVersion: detectChromeVersion(),
     languageModelGlobalPresent,
     modelState: "not-started",
     sessionState: "not-started",
     streamState: "not-started",
+    destinationSentCount: 0,
+    destinationFailedCount: 0,
+    lifecycleFlushCount: 0,
     telemetryCount: observations.length
   };
 }
 
 function renderStatus(state = globalWithPromptApi.__streamingAssistantState) {
   if (!runtimeStatus || !state) return;
-  runtimeStatus.textContent = JSON.stringify(state, null, 2);
+  renderRuntimeStatus(runtimeStatus, state);
 }
 
 function setState(update) {
@@ -86,7 +91,7 @@ function setState(update) {
 
 function renderTelemetry() {
   if (!telemetry) return;
-  renderTelemetryPanel(telemetry, [
+  renderTelemetryEvidence(telemetry, [
     { label: "latest", value: observations[observations.length - 1] },
     { label: "status", value: controller?.status },
     { label: "runtime", value: globalWithPromptApi.__streamingAssistantState }
@@ -100,6 +105,7 @@ function updateRunButtonLabel() {
 
 function createController(session, availability) {
   return observePromptApi({
+    capture: "metadata",
     session: {
       async prompt() {
         throw new Error("streaming-assistant uses promptStreaming()");
@@ -121,6 +127,7 @@ function createController(session, availability) {
             durationMs: observation.durationMs,
             latestTelemetry: observation
           });
+          renderTelemetry();
           globalThis.console.log("[streaming-assistant telemetry]", observation);
         }
       }
@@ -130,6 +137,24 @@ function createController(session, availability) {
       browserFamily: "chromium",
       browserMajor: Number(detectChromeVersion()),
       streamingSupport: "supported"
+    },
+    onStatus(status) {
+      const current = globalWithPromptApi.__streamingAssistantState || initialState(selectedMode());
+      if (status.type === "worker.starting" || status.type === "worker.ready") {
+        setState({ workerStatus: status.type });
+      } else if (status.type === "destination.sent") {
+        setState({ destinationSentCount: (current.destinationSentCount || 0) + 1 });
+      } else if (status.type === "destination.failed") {
+        setState({ destinationFailedCount: (current.destinationFailedCount || 0) + 1 });
+      } else if (status.type === "lifecycle.flushAttempted") {
+        setState({
+          lifecycleFlushCount: (current.lifecycleFlushCount || 0) + 1,
+          lastLifecycleFlushReason: status.reason,
+          lastLifecyclePendingCount: status.pendingCount,
+          lastLifecycleKeepalive: status.keepalive
+        });
+      }
+      renderTelemetry();
     }
   });
 }

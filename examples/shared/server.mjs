@@ -33,7 +33,7 @@ createServer(async (request, response) => {
     response.end();
     return;
   }
-  let filePath = rawPath === "/" ? "/examples/support-triage/index.html" : rawPath;
+  let filePath = rawPath === "/" ? "/examples/index.html" : rawPath;
   if (filePath.endsWith("/")) filePath += "index.html";
   const absolute = normalize(join(root, filePath));
   if (!absolute.startsWith(root)) {
@@ -50,5 +50,5 @@ createServer(async (request, response) => {
     response.end("Not found");
   }
 }).listen(port, "127.0.0.1", () => {
-  console.log(`Examples listening at http://127.0.0.1:${port}/examples/support-triage/`);
+  console.log(`Examples listening at http://127.0.0.1:${port}/examples/`);
 });

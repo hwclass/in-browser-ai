@@ -1,5 +1,6 @@
 import { observePromptApi, type TelemetryController } from "../../packages/telemetry/src/public/index";
-import { renderTelemetryPanel } from "../shared/harness";
+import { renderRuntimeStatus } from "../shared/runtime-status";
+import { renderTelemetryEvidence } from "../shared/telemetry-panel";
 
 type RuntimeMode = "deterministic" | "real";
 type AvailabilityState = "available" | "downloadable" | "downloading" | "unavailable" | "unknown";
@@ -31,6 +32,7 @@ type NativePromptSession = {
 type SupportTriageState = {
   runtimeMode: RuntimeMode;
   runtimeProvenance: "deterministic" | "native" | "missing";
+  captureMode: "metadata";
   chromeVersion?: string;
   languageModelGlobalPresent: boolean;
   availability?: AvailabilityState;
@@ -167,6 +169,7 @@ function initialState(mode: RuntimeMode): SupportTriageState {
   return {
     runtimeMode: mode,
     runtimeProvenance: mode === "real" ? (languageModelGlobalPresent ? "native" : "missing") : "deterministic",
+    captureMode: "metadata",
     chromeVersion: detectChromeVersion(),
     languageModelGlobalPresent,
     modelState: "not-started",
@@ -184,7 +187,7 @@ function initialState(mode: RuntimeMode): SupportTriageState {
 
 function renderStatus(state = globalWithPromptApi.__supportTriageState): void {
   if (!runtimeStatus || !state) return;
-  runtimeStatus.textContent = JSON.stringify(state, null, 2);
+  renderRuntimeStatus(runtimeStatus, state);
 }
 
 function setState(update: Partial<SupportTriageState>): SupportTriageState {
@@ -197,7 +200,7 @@ function setState(update: Partial<SupportTriageState>): SupportTriageState {
 
 function renderTelemetry(): void {
   if (!telemetry) return;
-  renderTelemetryPanel(telemetry, [
+  renderTelemetryEvidence(telemetry, [
     { label: "latest", value: observations[observations.length - 1] },
     { label: "status", value: controller?.status },
     { label: "runtime", value: globalWithPromptApi.__supportTriageState }
