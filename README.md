@@ -179,6 +179,9 @@ CSP `connect-src`, endpoint availability, and browser networking limits. Use
 local collectors, test endpoints, or public/browser-safe credentials only. Do
 not place private server-side observability credentials, privileged collector
 tokens, cookies, or `Authorization`/API-key headers in browser configuration.
+The PoC includes defensive validation for known private-header names, but it is
+not a cryptographic or universal secret detector. A secure relay for privileged
+backend credentials is future MVP scope, not Slice 4.
 
 Run the distribution example:
 
