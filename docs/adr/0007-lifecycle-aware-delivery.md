@@ -1,6 +1,6 @@
 # ADR 0007: Lifecycle-Aware Delivery
 
-Status: Accepted for Slice 5
+Status: Accepted for PoC release candidate
 
 ## Context
 

@@ -14,6 +14,8 @@ npm run test:integration
 npm run test:e2e
 npm run test:e2e:real-prompt-api
 npm run test:e2e:real-prompt-api-streaming
+npm run measure:overhead
+npm run verify
 npm run examples
 ```
 
@@ -257,7 +259,38 @@ application result, runtime/capture status, Worker or delivery state where
 useful, and normalized telemetry. This makes the PoC screen-recordable without
 requiring a viewer to know the internal architecture or open DevTools.
 
+## Final Validation
+
+Run the release-candidate validation suite with:
+
+```bash
+npm run verify
+```
+
+`npm run verify` runs typecheck, unit tests, integration tests, deterministic
+browser E2E tests, build, and example-serving validation. Native Prompt API
+compatibility remains intentionally separate because it depends on installed
+Chrome and browser-managed model readiness:
+
+```bash
+REAL_PROMPT_API_TIMEOUT_MS=900000 npm run test:e2e:real-prompt-api
+REAL_PROMPT_API_TIMEOUT_MS=900000 npm run test:e2e:real-prompt-api-streaming
+```
+
+Representative telemetry overhead can be measured with:
+
+```bash
+npm run measure:overhead
+```
+
+The overhead measurement uses deterministic Prompt API-compatible examples so
+SDK instrumentation cost can be distinguished from model/runtime inference
+latency. Native Prompt API runs are useful runtime evidence, but their model
+latency is not reported as telemetry SDK overhead. Export/network timing is
+reported separately from application-blocking observation cost.
+
 Current limitations remain intentional: Prompt API is the only runtime adapter;
 lifecycle delivery is best effort; OTLP is direct browser OTLP/HTTP JSON only;
 there is no secure relay, hosted collector, dashboard, durable outbox, retry
-system, Worker supervision, model routing, or final overhead report in Slice 6.
+system, Worker supervision, model routing, hosted docs site, SKILL packaging,
+runtime intelligence dataset, or model optimization in the PoC.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted for PoC release candidate
 
 ## Context
 

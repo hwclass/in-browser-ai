@@ -1,6 +1,6 @@
 # ADR 0004: Prompt API Instrumentation Boundary
 
-Status: Accepted for Slice 1, updated for Slice 6
+Status: Accepted for PoC release candidate
 
 ## Context
 

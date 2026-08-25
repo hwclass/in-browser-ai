@@ -1,6 +1,6 @@
 # ADR 0001: Functional Core / Imperative Shell
 
-Status: Accepted for Slice 1
+Status: Accepted for PoC release candidate
 
 ## Context
 

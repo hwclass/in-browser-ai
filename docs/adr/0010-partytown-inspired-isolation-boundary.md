@@ -1,6 +1,6 @@
 # ADR 0010: Partytown-Inspired Isolation Boundary
 
-Status: Accepted for Slice 1
+Status: Accepted for PoC release candidate
 
 ## Context
 

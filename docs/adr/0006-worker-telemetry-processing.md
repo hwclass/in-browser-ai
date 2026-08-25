@@ -1,6 +1,6 @@
 # ADR 0006: Worker Telemetry Processing
 
-Status: Accepted for Slice 1, updated for Slice 5
+Status: Accepted for PoC release candidate
 
 ## Context
 

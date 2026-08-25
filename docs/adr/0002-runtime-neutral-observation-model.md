@@ -1,6 +1,6 @@
 # ADR 0002: Runtime-Neutral Observation Model
 
-Status: Accepted for Slice 1, updated for Slice 6
+Status: Accepted for PoC release candidate
 
 ## Context
 

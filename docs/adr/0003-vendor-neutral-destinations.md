@@ -1,6 +1,6 @@
 # ADR 0003: Vendor-Neutral Destinations
 
-Status: Accepted for Slice 4
+Status: Accepted for PoC release candidate
 
 ## Context
 

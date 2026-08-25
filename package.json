@@ -14,7 +14,10 @@
     "test:e2e:real-prompt-api": "npm run build && playwright test -c packages/telemetry/playwright.real-prompt-api.config.ts",
     "test:e2e:real-prompt-api-streaming": "npm run build && playwright test -c packages/telemetry/playwright.real-prompt-api-streaming.config.ts",
     "examples": "node examples/shared/server.mjs",
-    "build": "tsc -p packages/telemetry/tsconfig.json"
+    "build": "tsc -p packages/telemetry/tsconfig.json",
+    "verify:examples": "node packages/telemetry/test-utils/verify-examples.mjs",
+    "measure:overhead": "npm run build && node packages/telemetry/test-utils/measure-overhead.mjs",
+    "verify": "npm run typecheck && npm test && npm run test:integration && npm run test:e2e && npm run build && npm run verify:examples"
   },
   "devDependencies": {
     "@playwright/test": "^1.34.3",

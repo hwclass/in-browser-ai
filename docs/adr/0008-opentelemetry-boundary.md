@@ -1,6 +1,6 @@
 # ADR 0008: OpenTelemetry Boundary
 
-Status: Accepted for Slice 4
+Status: Accepted for PoC release candidate
 
 ## Context
 

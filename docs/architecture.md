@@ -255,3 +255,37 @@ The examples map the architecture to screen-recordable developer surfaces:
   visible proof that metadata telemetry omits content.
 - `ecommerce-extraction`: application extraction result, console plus OTLP
   fanout, delivery state, and shared observation identity.
+
+## Slice 7 Final Validation Boundary
+
+Slice 7 does not add product runtime behavior. It hardens the release-candidate
+proof by validating the complete public flow from build scripts, automated test
+suites, native Prompt API gates, examples, docs, scope boundaries, and
+`validation.md`.
+
+Telemetry overhead evidence is measured separately from browser AI model
+latency. The validation helpers distinguish baseline deterministic operation
+timing, instrumented deterministic operation timing, incremental page-side
+observer work, serialization/message payload shape, Worker-side processing cost
+where measurable, and destination/export timing. Native Chrome Prompt API
+latency, TTFO, and total duration may be recorded as runtime evidence, but they
+are not treated as SDK overhead unless a measurement isolates the
+instrumentation delta.
+
+The final verification command remains an automation convenience over the same
+architecture:
+
+```text
+typecheck
+unit tests
+integration tests
+deterministic browser E2E
+build
+example-serving validation
+```
+
+Native `prompt()` and `promptStreaming()` compatibility gates remain separate
+because they require installed Chrome, native `window.LanguageModel`, and
+browser-managed model readiness. A final PASS requires those gates to pass in a
+supported environment or to be recorded honestly as BLOCKED/UNAVAILABLE when
+the environment cannot satisfy the native prerequisites.

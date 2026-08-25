@@ -1,6 +1,6 @@
 # ADR 0009: Worker Message Protocol
 
-Status: Accepted for Slice 1, updated for Slice 5
+Status: Accepted for PoC release candidate
 
 ## Context
 
