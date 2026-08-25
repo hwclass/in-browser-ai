@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ecommerce Extraction</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        color: #172026;
+        background: #f7f8fa;
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 20px;
+      }
+      textarea, pre, button, select {
+        font: inherit;
+      }
+      textarea {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 130px;
+      }
+      label {
+        display: block;
+        margin-top: 14px;
+        margin-bottom: 6px;
+        font-weight: 650;
+      }
+      button {
+        margin: 12px 0;
+        padding: 8px 12px;
+      }
+      pre {
+        overflow: auto;
+        padding: 12px;
+        background: #fff;
+        border: 1px solid #d8dde3;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Ecommerce Extraction</h1>
+      <p id="example-purpose" data-testid="example-purpose">Demonstrates console/OTLP fanout with one normalized observation, shared observation identity, and isolated destination status.</p>
+      <label for="capture-mode">Capture Mode</label>
+      <select id="capture-mode" data-testid="capture-mode">
+        <option value="metadata">metadata</option>
+        <option value="redacted">redacted</option>
+        <option value="full">full</option>
+      </select>
+      <label for="destination-mode">Destinations</label>
+      <select id="destination-mode" data-testid="destination-mode">
+        <option value="console-otlp">console + OTLP</option>
+        <option value="console">console only</option>
+        <option value="otlp">OTLP only</option>
+      </select>
+      <label for="listing">Product Listing</label>
+      <textarea id="listing" data-testid="listing">PRIVATE_PRODUCT_PROMPT: Extract product details from Leather Weekender, SKU BAG-042, price $189, color forest green, stock 12.</textarea>
+      <button id="extract">Extract product details</button>
+      <h2>Application Result</h2>
+      <pre id="result" data-testid="result">Waiting</pre>
+      <h2>Delivery Status</h2>
+      <pre id="delivery-status" data-testid="delivery-status">Waiting</pre>
+      <h2>Telemetry</h2>
+      <pre id="telemetry" data-testid="telemetry">Waiting</pre>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
